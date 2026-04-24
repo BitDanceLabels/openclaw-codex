@@ -1,5 +1,7 @@
 # 🦞 OpenClaw — Personal AI Assistant
 
+Server deploy cho stack đi cùng `bumbee-wiki-ai` xem ở [SERVER_DEPLOY.md](./SERVER_DEPLOY.md).
+
 <p align="center">
     <picture>
         <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/openclaw/openclaw/main/docs/assets/openclaw-logo-text-dark.svg">
