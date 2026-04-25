@@ -84,7 +84,52 @@ config.gateway.http ??= {};
 config.gateway.http.endpoints ??= {};
 config.gateway.http.endpoints.chatCompletions ??= {};
 config.gateway.http.endpoints.chatCompletions.enabled = true;
+config.agents ??= {};
+config.agents.defaults ??= {};
+config.agents.defaults.model ??= "openai-codex/gpt-5.4";
 fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
+NODE
+}
+
+seed_codex_auth_profile() {
+  local codex_auth="$codex_dst/auth.json"
+  local agent_dir="$repo_root/data/openclaw-config/agents/main/agent"
+  local profile_file="$agent_dir/auth-profiles.json"
+  [ -f "$codex_auth" ] || return 0
+  mkdir -p "$agent_dir"
+  if ! command -v node >/dev/null 2>&1; then
+    echo "WARN: node not found; skipping Codex auth profile seed" >&2
+    return 0
+  fi
+  node - "$codex_auth" "$profile_file" <<'NODE'
+const fs = require("fs");
+const [codexAuthPath, profilePath] = process.argv.slice(2);
+const source = JSON.parse(fs.readFileSync(codexAuthPath, "utf8"));
+const tokens = source.tokens && typeof source.tokens === "object" ? source.tokens : {};
+const access = typeof tokens.access_token === "string" ? tokens.access_token.trim() : "";
+const refresh = typeof tokens.refresh_token === "string" ? tokens.refresh_token.trim() : "";
+if (!access || !refresh) {
+  process.exit(0);
+}
+let store = { version: 1, profiles: {} };
+if (fs.existsSync(profilePath)) {
+  const raw = fs.readFileSync(profilePath, "utf8").trim();
+  if (raw) {
+    store = JSON.parse(raw);
+  }
+}
+store.version = store.version || 1;
+store.profiles = store.profiles && typeof store.profiles === "object" ? store.profiles : {};
+store.profiles["openai-codex:default"] = {
+  type: "oauth",
+  provider: "openai-codex",
+  access,
+  refresh,
+  expires: Date.now() + 55 * 60 * 1000,
+  ...(typeof tokens.id_token === "string" && tokens.id_token.trim() ? { idToken: tokens.id_token.trim() } : {}),
+  ...(typeof tokens.account_id === "string" && tokens.account_id.trim() ? { accountId: tokens.account_id.trim() } : {}),
+};
+fs.writeFileSync(profilePath, `${JSON.stringify(store, null, 2)}\n`, { mode: 0o600 });
 NODE
 }
 
@@ -128,6 +173,7 @@ fi
 
 mkdir -p "$repo_root/data/openclaw-config" "$repo_root/data/openclaw-workspace"
 enable_openai_http_endpoint
+seed_codex_auth_profile
 fix_container_permissions "$repo_root/data/openclaw-config"
 fix_container_permissions "$repo_root/data/openclaw-workspace"
 
