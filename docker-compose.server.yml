@@ -16,6 +16,8 @@ services:
     volumes:
       - ./data/openclaw-config:/home/node/.openclaw
       - ./data/openclaw-workspace:/home/node/.openclaw/workspace
+      - ${CODEX_CONFIG_DIR:-/root/.codex}:/home/node/.codex:ro
+      - ${CLAUDE_CONFIG_DIR:-/root/.claude}:/home/node/.claude:ro
     ports:
       - "${OPENCLAW_GATEWAY_BIND:-0.0.0.0}:${OPENCLAW_GATEWAY_PORT:-18789}:18789"
       - "127.0.0.1:${OPENCLAW_BRIDGE_PORT:-18790}:18790"
@@ -30,6 +32,7 @@ services:
         "${OPENCLAW_GATEWAY_MODE:-lan}",
         "--port",
         "18789",
+        "--allow-unconfigured",
       ]
     healthcheck:
       test:
@@ -65,6 +68,8 @@ services:
     volumes:
       - ./data/openclaw-config:/home/node/.openclaw
       - ./data/openclaw-workspace:/home/node/.openclaw/workspace
+      - ${CODEX_CONFIG_DIR:-/root/.codex}:/home/node/.codex:ro
+      - ${CLAUDE_CONFIG_DIR:-/root/.claude}:/home/node/.claude:ro
     stdin_open: true
     tty: true
     init: true

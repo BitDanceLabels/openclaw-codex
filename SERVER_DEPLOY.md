@@ -14,12 +14,14 @@ bumbee-wiki-ai -> http://<server>:18789/v1 -> openclaw-codex
 cd /path/to/openclaw-codex
 cp .env.server.example .env
 mkdir -p data/openclaw-config data/openclaw-workspace
+bash scripts/sync-cli-auth-env.sh .env
 ```
 
 Sửa `.env`:
 
 - `OPENCLAW_GATEWAY_TOKEN`: bắt buộc
 - `CLAUDE_*`: nếu bạn dùng Claude auth
+- `CODEX_CONFIG_DIR` / `CLAUDE_CONFIG_DIR`: tự điền bằng `bash scripts/sync-cli-auth-env.sh .env`; compose mount read-only vào container để OpenClaw reuse Codex/Claude CLI auth của máy host
 - port/bind nếu cần
 
 ## 2. Build và chạy
@@ -56,6 +58,7 @@ OPENAI_MODEL=openclaw/default
 
 - file này không dùng path tuyệt đối theo máy local
 - config/workspace nằm trong `./data/`
+- Codex/Claude CLI auth không bị copy vào repo; chỉ mount read-only từ host qua `CODEX_CONFIG_DIR` và `CLAUDE_CONFIG_DIR`
 - gateway port `18789` public theo bind bạn chọn
 - bridge port `18790` chỉ bind localhost mặc định
 
